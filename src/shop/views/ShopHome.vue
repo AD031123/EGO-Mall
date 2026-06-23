@@ -19,13 +19,13 @@ const noMore = ref(false)
 const searchQuery = ref('')
 const isSearchMode = ref(false)
 
-// ===== 3D 轮播：图片 + 对应商品 ID =====
+// ===== 3D 轮播：本地演示页 =====
 const banners = [
-  { src: '/images/banner1.jpg', productId: 'P_BANNER_1' },
-  { src: '/images/banner2.jpg', productId: 'P_BANNER_2' },
-  { src: '/images/banner3.jpg', productId: 'P_BANNER_3' },
-  { src: '/images/banner4.jpg', productId: 'P_BANNER_4' },
-  { src: '/images/banner5.jpg', productId: 'P_BANNER_5' },
+  { src: '/images/banner1.jpg', showcaseId: 'banner1' },
+  { src: '/images/banner2.jpg', showcaseId: 'banner2' },
+  { src: '/images/banner3.jpg', showcaseId: 'banner3' },
+  { src: '/images/banner4.jpg', showcaseId: 'banner4' },
+  { src: '/images/banner5.jpg', showcaseId: 'banner5' },
 ]
 
 // 监听路由变化，处理搜索参数
@@ -127,10 +127,10 @@ function onSearchSubmit(q) {
   }
 }
 
-// 轮播图点击 → 跳转商品详情
+// 轮播图点击 → 跳转本地演示页
 function onBannerClick(banner) {
   if (banner && banner.productId) {
-    router.push(`/product/${banner.productId}`)
+    router.push(`/showcase/${banner.productId}`)
   }
 }
 

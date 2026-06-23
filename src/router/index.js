@@ -13,6 +13,7 @@ const routes = [
       { path: 'hot', name: 'ShopHot', component: () => import('@/shop/views/Hot.vue') },
       { path: 'deals', name: 'ShopDeals', component: () => import('@/shop/views/Deals.vue') },
       { path: 'product/:id', name: 'ShopDetail', component: () => import('@/shop/views/ShopDetail.vue') },
+      { path: 'showcase/:id', name: 'Showcase', component: () => import('@/shop/views/Showcase.vue') },
       { path: 'login', name: 'ShopLogin', component: () => import('@/shop/views/Login.vue') },
       { path: 'profile', name: 'ShopProfile', component: () => import('@/shop/views/Profile.vue') },
       { path: 'orders', name: 'ShopOrders', component: () => import('@/shop/views/Orders.vue') },

@@ -38,7 +38,7 @@ const cards = computed(() => {
 
   return props.banners.map((banner, i) => {
     const src = typeof banner === 'string' ? banner : banner.src
-    const productId = typeof banner === 'string' ? null : banner.productId
+    const productId = typeof banner === 'string' ? null : (banner.productId || banner.showcaseId)
     // 计算相对偏移（-2, -1, 0, 1, 2）
     let offset = ((i - activeIndex.value) % n + n) % n
     if (offset > Math.floor(n / 2)) offset -= n
