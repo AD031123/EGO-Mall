@@ -14,6 +14,8 @@ export default defineConfig({
     },
   },
   server: {
+    host: "0.0.0.0",
+    port: 5174,
     headers: {
       'Content-Security-Policy': "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline'; font-src 'self' https: data:; connect-src 'self' http://localhost:5173 ws://localhost:5173;"
     },

@@ -18,7 +18,6 @@ const total = ref(0)
 const noMore = ref(false)
 
 onMounted(async () => {
-  // 读取 URL 参数
   if (route.query.l1) activeL1.value = Number(route.query.l1)
   if (route.query.l2) activeL2.value = Number(route.query.l2)
   try {
@@ -50,7 +49,6 @@ function catChildren(l1Id) {
 async function loadProducts() {
   loading.value = true; page.value = 1; noMore.value = false; products.value = []
   try {
-    // 将分类筛选参数传给服务端，由服务端做 SQL 过滤
     const params = { page: page.value, pageSize }
     if (activeL1.value) params.category_l1 = activeL1.value
     if (activeL2.value) params.category_l2 = activeL2.value
@@ -77,10 +75,10 @@ async function loadMore() {
       if (r.data.list.length < pageSize) noMore.value = true
     }
   } catch {}
+}
 
 function selectL2(l1Id, l2Id) {
   if (activeL2.value === l2Id) {
-    // 再次点击 → 取消，恢复全部
     activeL1.value = null
     activeL2.value = null
   } else {
