@@ -16,6 +16,11 @@ const previewHtml = ref('')
 const fileInput = ref(null)
 const saving = ref(false)
 
+// 从 localStorage 获取管理员 token
+function getToken() {
+  return localStorage.getItem('ego_admin_token') || ''
+}
+
 onMounted(() => {
   const pid = route.query.pid || ''
   const name = route.query.name || ''
@@ -59,8 +64,13 @@ async function onImageFileChange(e) {
     const dataUrl = ev.target.result
     try {
       const pid = productId.value
+      const token = getToken()
       const res = await fetch('/api/products/upload-desc-image', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ product_id: pid || '', image: dataUrl })
       })
       const r = await res.json()
@@ -88,9 +98,13 @@ async function onSave() {
   }
   saving.value = true
   try {
-    // 直接调 PUT 更新产品描述
+    const token = getToken()
     const res = await fetch(`/api/products/${productId.value}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({ description: markdown.value })
     })
     const r = await res.json()
