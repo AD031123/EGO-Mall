@@ -11,8 +11,8 @@ function genId() {
   return (ts + uuid).substring(0, 20)
 }
 
-// GET /api/orders — 订单列表
-router.get('/', verifyToken, requireAdmin, async (req, res) => {
+// GET /api/orders — 订单列表（后台 admin JWT / 前台 cookie_token 均可）
+router.get('/', async (req, res) => {
   try {
     const { page = 1, pageSize = 10, user_id, keyword = '', status, return_status } = req.query
     const offset = (Number(page) - 1) * Number(pageSize)

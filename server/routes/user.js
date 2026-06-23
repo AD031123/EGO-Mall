@@ -6,7 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import pool from '../db.js'
-import { JWT_SECRET, JWT_EXPIRES, verifyToken, requireAdmin } from '../middleware/auth.js'
+import { JWT_SECRET, JWT_EXPIRES, verifyToken, requireAdmin, getUserId } from '../middleware/auth.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -310,10 +310,28 @@ router.post('/', verifyToken, requireAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ code: 1, message: err.message }) }
 })
 
-router.put('/:id', verifyToken, requireAdmin, async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
-    const [[targetUser]] = await pool.query('SELECT id FROM users WHERE id = ? OR uid = ?', [req.params.id, req.params.id])
+    // 前台用户使用 cookie_token 认证
+    const userId = await getUserId(req)
+    if (!userId) return res.status(401).json({ code: 1, message: '登录已过期，请重新登录' })
+    // 获取目标用户（查 id 或 uid）
+    const [[targetUser]] = await pool.query('SELECT id, created_by FROM users WHERE id = ? OR uid = ?', [req.params.id, req.params.id])
     if (!targetUser) return res.status(404).json({ code: 1, message: '用户不存在' })
+    // 权限：admin 可编辑任意用户，普通用户仅可编辑自己
+    const isSelf = String(targetUser.id) === String(userId)
+    // 进一步检查是否为 admin（通过 JWT token 兼容管理员后台）
+    let isAdmin = false
+    try {
+      const authHeader = req.headers['authorization'] || ''
+      let token = authHeader
+      if (authHeader.startsWith('Bearer ')) token = authHeader.substring(7)
+      const decoded = jwt.verify(token, JWT_SECRET)
+      isAdmin = decoded.role === 'admin'
+    } catch {}
+    if (!isSelf && !isAdmin) {
+      return res.status(403).json({ code: 1, message: '无权限修改该用户' })
+    }
 
     const { username, email, phone, password, status, role, birthday, gender } = req.body
     const sets = []; const params = []

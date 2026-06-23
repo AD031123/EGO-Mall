@@ -59,8 +59,8 @@ export function autoLogin(cookieToken) {
   return request('/user/auto-login', { method: 'POST', body: JSON.stringify({ cookie_token: cookieToken }) })
 }
 
-export function updateAvatar(userId, avatar) {
-  return request(`/user/${userId}/avatar`, { method: 'PUT', body: JSON.stringify({ avatar }) })
+export function updateUser(id, data) {
+  return authRequest(`/user/${id}`, { method: 'PUT', body: JSON.stringify(data) })
 }
 
 export function uploadAvatarFile(uid, image) {

@@ -2,8 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast.js'
-import { uploadAvatarFile, logout as apiLogout, getAddresses, createAddress, updateAddress, deleteAddress, getMyOrders, returnOrder } from '@/api/shop.js'
-import { updateUser } from '@/api/products.js'
+import { uploadAvatarFile, logout as apiLogout, getAddresses, createAddress, updateAddress, deleteAddress, getMyOrders, returnOrder, updateUser } from '@/api/shop.js'
 import CropDialog from '@/components/CropDialog.vue'
 import AddressModal from '@/shop/components/AddressModal.vue'
 
