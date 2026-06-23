@@ -15,6 +15,7 @@ coverage
 *.local
 
 # Editor directories and files
+public/product/*
 .claude/
 .vscode/*
 !.vscode/extensions.json
