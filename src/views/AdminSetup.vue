@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { checkAdminSetup, createAdminAccount, login } from '@/api/shop.js'
+import { checkAdminSetup, createAdminAccount, adminLogin } from '@/api/shop.js'
 import { useToast } from '@/composables/useToast.js'
 
 const toast = useToast()
@@ -15,15 +15,16 @@ const submitting = ref(false)
 const loggingIn = ref(false)
 const loginForm = ref({ username: '', password: '' })
 
-// 存储用户信息到统一的 ego_* keys（与前台登录一致）
-function saveAuth(data) {
-  localStorage.setItem('ego_token', data.token)
-  localStorage.setItem('ego_cookie', data.cookie_token)
-  localStorage.setItem('ego_user', JSON.stringify(data.user))
+// 存储管理员信息到独立的 ego_admin_* keys
+function saveAdminAuth(data) {
+  localStorage.setItem('ego_admin_token', data.token)
+  localStorage.setItem('ego_admin_cookie', data.cookie_token)
+  localStorage.setItem('ego_admin_user', JSON.stringify(data.user))
+  localStorage.setItem('ego_admin_expiry', String(Date.now() + 7 * 24 * 3600 * 1000))
 }
 
 onMounted(async () => {
-  // 先检查是否已有管理员
+  // 检查是否已有管理员
   try {
     const r = await checkAdminSetup()
     if (r.code === 0) {
@@ -43,14 +44,14 @@ async function doSetup() {
   try {
     const r = await createAdminAccount({ username: f.username.trim(), password: f.password })
     if (r.code === 0) {
-      saveAuth(r.data)
+      saveAdminAuth(r.data)
       toast.success('管理员账号创建成功')
       needsSetup.value = false
       router.replace('/admin')
     } else {
       toast.error(r.message || '创建失败')
     }
-  } catch { toast.error('创建失败，请重试') }
+  } catch (e) { toast.error(e.message || '创建失败，请重试') }
   finally { submitting.value = false }
 }
 
@@ -60,21 +61,15 @@ async function doLogin() {
 
   loggingIn.value = true
   try {
-    // 使用统一的前台登录接口（token 中已包含 role）
-    const r = await login({ account: f.username.trim(), password: f.password })
+    const r = await adminLogin({ username: f.username.trim(), password: f.password })
     if (r.code === 0) {
-      // 检查是否为管理员
-      if (r.data.user.role !== 'admin') {
-        toast.error('该账号非管理员，无法登录后台')
-        return
-      }
-      saveAuth(r.data)
+      saveAdminAuth(r.data)
       toast.success('登录成功')
       router.replace('/admin')
     } else {
       toast.error(r.message || '登录失败')
     }
-  } catch { toast.error('登录失败，请重试') }
+  } catch (e) { toast.error(e.message || '登录失败，请重试') }
   finally { loggingIn.value = false }
 }
 </script>
@@ -119,8 +114,8 @@ async function doLogin() {
         <p class="text-muted small mb-4 text-center">请使用管理员账号登录</p>
 
         <div class="mb-3">
-          <label class="form-label small fw-semibold">账号（邮箱/手机号）</label>
-          <input v-model="loginForm.username" class="form-control" placeholder="管理员邮箱或手机号" @keyup.enter="doLogin" />
+          <label class="form-label small fw-semibold">管理员用户名</label>
+          <input v-model="loginForm.username" class="form-control" placeholder="请输入管理员用户名" @keyup.enter="doLogin" />
         </div>
         <div class="mb-4">
           <label class="form-label small fw-semibold">密码</label>

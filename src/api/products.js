@@ -1,8 +1,8 @@
 const BASE = '/api'
 
-// 从 localStorage 获取前台登录的 token（token 中已包含 role 信息）
+// 从 localStorage 获取管理员 token
 function getToken() {
-  return localStorage.getItem('ego_token') || ''
+  return localStorage.getItem('ego_admin_token') || ''
 }
 
 async function request(url, options = {}) {

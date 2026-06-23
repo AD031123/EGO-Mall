@@ -9,8 +9,8 @@ const router = useRouter()
 const adminName = ref('管理员')
 
 onMounted(() => {
-  // 读取前台登录的用户信息（统一用 ego_user）
-  const stored = localStorage.getItem('ego_user')
+  // 读取管理员登录信息
+  const stored = localStorage.getItem('ego_admin_user')
   if (stored) {
     try {
       const user = JSON.parse(stored)

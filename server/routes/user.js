@@ -312,12 +312,8 @@ router.post('/', verifyToken, requireAdmin, async (req, res) => {
 
 router.put('/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
-    // 归属检查
-    const [[targetUser]] = await pool.query('SELECT created_by FROM users WHERE id = ? OR uid = ?', [req.params.id, req.params.id])
+    const [[targetUser]] = await pool.query('SELECT id FROM users WHERE id = ? OR uid = ?', [req.params.id, req.params.id])
     if (!targetUser) return res.status(404).json({ code: 1, message: '用户不存在' })
-    if (targetUser.created_by !== null && targetUser.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限修改该用户（仅创建者可编辑）' })
-    }
 
     const { username, email, phone, password, status, role, birthday, gender } = req.body
     const sets = []; const params = []
@@ -338,12 +334,8 @@ router.put('/:id', verifyToken, requireAdmin, async (req, res) => {
 
 router.delete('/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
-    // 归属检查
-    const [[targetUser]] = await pool.query('SELECT created_by FROM users WHERE id = ? OR uid = ?', [req.params.id, req.params.id])
+    const [[targetUser]] = await pool.query('SELECT id FROM users WHERE id = ? OR uid = ?', [req.params.id, req.params.id])
     if (!targetUser) return res.status(404).json({ code: 1, message: '用户不存在' })
-    if (targetUser.created_by !== null && targetUser.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限删除该用户（仅创建者可删除）' })
-    }
     await pool.query('DELETE FROM users WHERE id = ? OR uid = ?', [req.params.id, req.params.id])
     res.json({ code: 0, message: '删除成功' })
   } catch (err) { res.status(500).json({ code: 1, message: err.message }) }

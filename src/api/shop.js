@@ -131,6 +131,10 @@ export function createAdminAccount(data) {
   return request('/user/admin-setup', { method: 'POST', body: JSON.stringify(data) })
 }
 
+export function adminLogin(data) {
+  return request('/user/admin-login', { method: 'POST', body: JSON.stringify(data) })
+}
+
 export function getCoupons(productId) {
   return request(`/coupons?product_id=${productId}`)
 }

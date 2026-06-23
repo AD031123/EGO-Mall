@@ -45,22 +45,20 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // 只匹配 /admin 及其子路由，排除 /admin-setup
   if (to.path === '/admin' || to.path.startsWith('/admin/')) {
-    const userStr = localStorage.getItem('ego_user')
-    if (!userStr) {
-      // 完全未登录 → 跳转前台登录
-      next('/login')
+    const adminUserStr = localStorage.getItem('ego_admin_user')
+    if (!adminUserStr) {
+      // 未登录管理员 → 跳转管理员登录/初始化页面
+      next('/admin-setup')
       return
     }
-    // 检查是否为管理员
-    try {
-      const user = JSON.parse(userStr)
-      if (user.role !== 'admin') {
-        // 普通用户试图访问后台 → 跳转 403 禁止页面
-        next('/403')
-        return
-      }
-    } catch {
-      next('/login')
+    // 检查 token 是否过期（7天）
+    const expiry = localStorage.getItem('ego_admin_expiry')
+    if (expiry && Date.now() > Number(expiry)) {
+      localStorage.removeItem('ego_admin_token')
+      localStorage.removeItem('ego_admin_cookie')
+      localStorage.removeItem('ego_admin_user')
+      localStorage.removeItem('ego_admin_expiry')
+      next('/admin-setup')
       return
     }
   }

@@ -12,10 +12,6 @@ const router = useRouter()
 const userInfo = ref(null)
 const showAvatarModal = ref(false)
 
-// 管理员开关
-const adminToggling = ref(false)
-const isAdmin = computed(() => userInfo.value?.role === 'admin')
-
 // 裁剪弹窗
 const cropVisible = ref(false)
 const cropSrc = ref('')
@@ -215,28 +211,6 @@ async function onLogout() {
   if (uid) { try { await apiLogout(uid) } catch {} }
   router.push('/')
 }
-
-// 切换管理员权限
-async function toggleAdmin() {
-  adminToggling.value = true
-  try {
-    const token = localStorage.getItem('ego_token') || ''
-    const res = await fetch('/api/user/' + userInfo.value.id + '/toggle-admin', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
-    })
-    const r = await res.json()
-    if (r.code === 0) {
-      toast.success(r.message)
-      // 更新本地 userInfo 中的 role
-      userInfo.value.role = r.data.role
-      localStorage.setItem('ego_user', JSON.stringify(userInfo.value))
-    } else {
-      toast.error(r.message || '操作失败')
-    }
-  } catch { toast.error('操作失败') }
-  finally { adminToggling.value = false }
-}
 </script>
 
 <template>
@@ -339,24 +313,6 @@ async function toggleAdmin() {
           </div>
 
           <hr class="my-4" />
-
-          <!-- 管理员权限开关（测试用） -->
-          <div class="d-flex align-items-center justify-content-between p-3 mb-3 rounded-3" style="background:#fffbe6;border:1px solid #ffe58f;">
-            <div>
-              <div class="fw-semibold" style="font-size:0.9rem;">🛠️ 管理员权限</div>
-              <div class="text-muted" style="font-size:0.75rem;">开启后将获得后台管理权限（测试用途）</div>
-            </div>
-            <div class="form-check form-switch mb-0">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                :checked="isAdmin"
-                :disabled="adminToggling"
-                @change="toggleAdmin"
-                style="cursor:pointer;width:44px;height:24px;"
-              />
-            </div>
-          </div>
 
           <button class="btn btn-outline-danger btn-sm rounded-pill px-4" @click="onLogout">退出登录</button>
         </template>

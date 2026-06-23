@@ -135,11 +135,8 @@ router.post('/', verifyToken, requireAdmin, async (req, res) => {
 // DELETE /api/coupons/:id  — 管理员删除优惠券
 router.delete('/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
-    const [[coupon]] = await pool.query('SELECT created_by FROM coupons WHERE id = ?', [req.params.id])
+    const [[coupon]] = await pool.query('SELECT id FROM coupons WHERE id = ?', [req.params.id])
     if (!coupon) return res.status(404).json({ code: 1, message: '优惠券不存在' })
-    if (coupon.created_by !== null && coupon.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限删除该优惠券（仅创建者可删除）' })
-    }
     await pool.query('DELETE FROM coupons WHERE id = ?', [req.params.id])
     res.json({ code: 0, message: '删除成功' })
   } catch (err) {

@@ -4,7 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import pool from '../db.js'
-import { verifyToken, requireAdmin, checkOwnership } from '../middleware/auth.js'
+import { verifyToken, requireAdmin } from '../middleware/auth.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -151,21 +151,9 @@ router.put('/:id', verifyToken, requireAdmin, async (req, res) => {
     const { name, subtitle, category_l1, category_l2, main_image, images, video_url, description, status, skus } = req.body
     const id = req.params.id
 
-    // 获取 product_id 和创建者
-    const [[prod]] = await pool.query('SELECT product_id, created_by FROM products WHERE id = ? OR product_id = ?', [id, id])
+    // 获取 product_id
+    const [[prod]] = await pool.query('SELECT product_id FROM products WHERE id = ? OR product_id = ?', [id, id])
     if (!prod) return res.status(404).json({ code: 1, message: '商品不存在' })
-
-    // 权限检查：使用 created_by（JWT 用户 ID）替代原来的 created_phone
-    const ownership = await checkOwnership('products', prod.product_id ? (await (async () => {
-      // 用 id 查询（因为 checkOwnership 需要的是 id）
-      const [[p]] = await pool.query('SELECT id FROM products WHERE product_id = ?', [prod.product_id])
-      return p ? p.id : id
-    })()) : id, req.user.id)
-    // 简化：直接用 prod 中的 id 做检查
-    const [[prodWithId]] = await pool.query('SELECT id, created_by FROM products WHERE id = ? OR product_id = ?', [id, id])
-    if (prodWithId.created_by !== null && prodWithId.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限修改该商品（仅创建者可编辑）' })
-    }
 
     const productId = prod.product_id
     const productDir = path.join(PUBLIC_DIR, 'product', productId)
@@ -231,12 +219,9 @@ router.post('/upload-desc-image', verifyToken, requireAdmin, async (req, res) =>
     if (!product_id || !image) return res.status(400).json({ code: 1, message: '缺少参数' })
     if (!image.startsWith('data:image/')) return res.status(400).json({ code: 1, message: '图片格式不正确' })
 
-    // 获取商品信息并检查归属
-    const [[prod]] = await pool.query('SELECT product_id, created_by FROM products WHERE id = ? OR product_id = ?', [product_id, product_id])
+    // 获取商品信息
+    const [[prod]] = await pool.query('SELECT product_id FROM products WHERE id = ? OR product_id = ?', [product_id, product_id])
     if (!prod) return res.status(404).json({ code: 1, message: '商品不存在' })
-    if (prod.created_by !== null && prod.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限操作该商品（仅创建者可操作）' })
-    }
 
     const pid = prod.product_id
     const prodDir = path.join(PUBLIC_DIR, 'product', pid)
@@ -272,12 +257,8 @@ router.post('/upload-desc-image', verifyToken, requireAdmin, async (req, res) =>
 
 router.delete('/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
-    const [[prod]] = await pool.query('SELECT product_id, created_by FROM products WHERE id = ? OR product_id = ?', [req.params.id, req.params.id])
+    const [[prod]] = await pool.query('SELECT product_id FROM products WHERE id = ? OR product_id = ?', [req.params.id, req.params.id])
     if (!prod) return res.status(404).json({ code: 1, message: '商品不存在' })
-    // 归属检查
-    if (prod.created_by !== null && prod.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限删除该商品（仅创建者可删除）' })
-    }
     await pool.query('DELETE FROM product_skus WHERE product_id = ?', [prod.product_id])
     await pool.query('DELETE FROM products WHERE id = ? OR product_id = ?', [req.params.id, req.params.id])
     res.json({ code: 0, message: '删除成功' })

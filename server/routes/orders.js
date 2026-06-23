@@ -117,12 +117,8 @@ router.post('/', async (req, res) => {
 // PUT /api/orders/:id — 更新订单（管理员）
 router.put('/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
-    // 归属检查
-    const [[order]] = await pool.query('SELECT created_by FROM orders WHERE id = ?', [req.params.id])
+    const [[order]] = await pool.query('SELECT id FROM orders WHERE id = ?', [req.params.id])
     if (!order) return res.status(404).json({ code: 1, message: '订单不存在' })
-    if (order.created_by !== null && order.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限修改该订单（仅创建者可编辑）' })
-    }
 
     const { username, product_name, unit_price, quantity, total_amount, status } = req.body
     const sets = []; const params = []
@@ -169,12 +165,8 @@ router.post('/:id/return', async (req, res) => {
 // POST /api/orders/:id/return/approve — 管理员同意退货
 router.post('/:id/return/approve', verifyToken, requireAdmin, async (req, res) => {
   try {
-    const [[order]] = await pool.query('SELECT created_by FROM orders WHERE id = ?', [req.params.id])
+    const [[order]] = await pool.query('SELECT id FROM orders WHERE id = ?', [req.params.id])
     if (!order) return res.status(404).json({ code: 1, message: '订单不存在' })
-    // 退货处理：如果订单有创建者（管理员创建），检查归属；前台用户下单的订单 created_by 为 NULL，所有管理员可处理
-    if (order.created_by !== null && order.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限处理该订单退货（仅创建者可操作）' })
-    }
     await pool.query(
       'UPDATE orders SET return_status = 2, return_processed_at = NOW() WHERE id = ?',
       [req.params.id]
@@ -188,11 +180,8 @@ router.post('/:id/return/approve', verifyToken, requireAdmin, async (req, res) =
 // POST /api/orders/:id/return/reject — 管理员拒绝退货
 router.post('/:id/return/reject', verifyToken, requireAdmin, async (req, res) => {
   try {
-    const [[order]] = await pool.query('SELECT created_by FROM orders WHERE id = ?', [req.params.id])
+    const [[order]] = await pool.query('SELECT id FROM orders WHERE id = ?', [req.params.id])
     if (!order) return res.status(404).json({ code: 1, message: '订单不存在' })
-    if (order.created_by !== null && order.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限处理该订单退货（仅创建者可操作）' })
-    }
     const { reject_reason = '' } = req.body
     await pool.query(
       'UPDATE orders SET return_status = 3, return_reject_reason = ?, return_processed_at = NOW() WHERE id = ?',
@@ -224,11 +213,8 @@ router.get('/returns/messages', async (req, res) => {
 // DELETE /api/orders/:id — 删除订单（管理员）
 router.delete('/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
-    const [[order]] = await pool.query('SELECT created_by FROM orders WHERE id = ?', [req.params.id])
+    const [[order]] = await pool.query('SELECT id FROM orders WHERE id = ?', [req.params.id])
     if (!order) return res.status(404).json({ code: 1, message: '订单不存在' })
-    if (order.created_by !== null && order.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限删除该订单（仅创建者可删除）' })
-    }
     await pool.query('DELETE FROM orders WHERE id = ?', [req.params.id])
     res.json({ code: 0, message: '删除成功' })
   } catch (err) {

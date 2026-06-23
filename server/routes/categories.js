@@ -53,13 +53,8 @@ router.post('/', verifyToken, requireAdmin, async (req, res) => {
 router.put('/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
     const { name, sort_order } = req.body
-
-    // 归属检查
-    const [[cat]] = await pool.query('SELECT created_by FROM categories WHERE id = ?', [req.params.id])
+    const [[cat]] = await pool.query('SELECT id FROM categories WHERE id = ?', [req.params.id])
     if (!cat) return res.status(404).json({ code: 1, message: '分类不存在' })
-    if (cat.created_by !== null && cat.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限修改该分类（仅创建者可编辑）' })
-    }
 
     const sets = []; const params = []
     if (name !== undefined) { sets.push('name = ?'); params.push(name) }
@@ -74,13 +69,8 @@ router.put('/:id', verifyToken, requireAdmin, async (req, res) => {
 // DELETE /api/categories/:id
 router.delete('/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
-    // 归属检查
-    const [[cat]] = await pool.query('SELECT created_by FROM categories WHERE id = ?', [req.params.id])
+    const [[cat]] = await pool.query('SELECT id FROM categories WHERE id = ?', [req.params.id])
     if (!cat) return res.status(404).json({ code: 1, message: '分类不存在' })
-    if (cat.created_by !== null && cat.created_by !== req.user.id) {
-      return res.status(403).json({ code: 1, message: '无权限删除该分类（仅创建者可删除）' })
-    }
-
     await pool.query('DELETE FROM categories WHERE id = ? OR parent_id = ?', [req.params.id, req.params.id])
     res.json({ code: 0, message: '删除成功' })
   } catch (err) { res.status(500).json({ code: 1, message: err.message }) }
