@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(taskkill /f /im node.exe 2>$null)"
+    ]
+  }
+}
